@@ -1,0 +1,17 @@
+doctype html
+html
+  include bootstrap_top.pug
+
+  body
+    include navbar.pug
+    
+    div(class="container")
+      if showlogout
+        div(class="row justify-content-md-center")
+          div(class="alert alert-info" role="alert") Logged out.
+      div(class="row justify-content-md-center")
+        form(action="/login" method="post")
+          input(type="email" class="form-control" id="login_email" name="email" placeholder="Email address")
+          input(type="password" class="form-control" id="login_password" name="pass" placeholder="Password")
+          button(type="submit" class="btn btn-primary") Login
+    include bootstrap_bot.pug

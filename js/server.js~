@@ -1,0 +1,29 @@
+const https = require('https');
+const fs = require('fs');
+const express = require('express');
+const session = requre('client-sessions');
+// https://stormpath.com/blog/everything-you-ever-wanted-to-know-about-node-dot-js-sessions
+
+const auth = require('./auth_dummy.js');
+
+const options = {
+    key: fs.readFileSync('/etc/letsencrypt/live/gcloud.blakethomas.blog/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/gcloud.blakethomas.blog/cert.pem')
+};
+
+const app = express();
+const WEBROOT = '/home/beebop/src/cs-final-project/html/';
+
+app.get('/', (req, res) => {
+    fs.readFile(WEBROOT + "index.html", 'utf-8', (err, data) => {
+	res.writeHead(200);
+	res.end(data);
+    });
+});
+
+app.post('/login', (req, res) => {
+    
+});
+
+https.createServer(options, app).listen(443);
+

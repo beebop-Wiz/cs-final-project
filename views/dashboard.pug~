@@ -1,0 +1,8 @@
+doctype html
+html
+  include bootstrap_top.pug
+
+  body
+    include navbar.pug
+
+    include bootstrap_bot.pug
