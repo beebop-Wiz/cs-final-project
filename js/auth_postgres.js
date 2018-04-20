@@ -23,10 +23,10 @@ exports.auth = function (req, res, callback) {
     });
 }
 
-exports.newuser = function (req, res, callback = (valid, data) => { }) {
+exports.newuser = function (req, res, code, callback = (valid, data) => { }) {
     var email = req.body.email;
     var pass = req.body.pass;
-    var code = req.body.code;
+    var name = req.body.name;
     var fail = false;
 
     client.query('SELECT COUNT(*) FROM users WHERE email=$1::text', [email], (err, q) => {
@@ -47,7 +47,7 @@ exports.newuser = function (req, res, callback = (valid, data) => { }) {
                     fail = true;
                 } else {
                     var pwh = hash.generate(pass, { algorithm: 'sha256' });
-                    client.query('INSERT INTO users (email, pwhash, admin) VALUES ($1, $2, $3) RETURNING id', [email, pwh, false], (err, q) => {
+                    client.query('INSERT INTO users (email, pwhash, admin, name) VALUES ($1, $2, $3, $4::text) RETURNING id', [email, pwh, false, name], (err, q) => {
                         callback(true, { id: q.rows[0].id });
                     });
                 }

@@ -50,9 +50,11 @@ app.get('/class', (req, res) => {
     if (req.session && req.session.admin) {
         datastore.getClassInfo(req.query.id, (err, cl) => {
             if (err || !cl) res.redirect('/dashboard');
-            else res.render('class_admin', { user: req.session.user, info: cl });
+            else datastore.getStudentsForClass(cl.id, (err, students) => {
+                res.render('class_admin', { user: req.session.user, info: cl, students: students });
+            });
         });
-    } else if(req.session) {
+    } else if (req.session) {
         datastore.getClassInfo(req.query.id, (err, cl) => {
             if (err || !cl) res.redirect('/dashboard');
             else res.render('class', { user: req.session.user, info: cl });
@@ -116,7 +118,7 @@ app.post('/login', (req, res) => {
     auth.auth(req, res, (valid, data) => {
         console.log("auth: " + valid);
         if (valid) {
-            req.session.user = req.body.email;
+            req.session.user = data.name;
             req.session.admin = data.admin;
             console.log(req.session.admin);
             req.session.id = data.id;
@@ -130,14 +132,32 @@ app.post('/login', (req, res) => {
     });
 });
 
+app.get('/newuser', (req, res) => {
+    datastore.getClassByCode(req.query.code, (err, cl) => {
+        if (cl) {
+            req.session.code = req.query.code;
+            res.render('newuser');
+        } else {
+            req.session.reset();
+            req.session.showjoinerr = true;
+            req.session.error = err;
+            res.redirect('/');
+        }
+    });
+});
+
+app.get('/newassign', (req, res) => {
+    res.render('newassign', { user: req.session.user });
+});
+
 app.post('/join', (req, res) => {
     datastore.openTransaction();
-    auth.newuser(req, res, (valid, data) => {
+    auth.newuser(req, res, req.session.code, (valid, data) => {
         console.log("/join callback");
         if (valid) {
             req.session.user = req.body.email;
             req.session.id = data.id;
-            datastore.getClassByCode(req.body.code, (err, cl) => {
+            datastore.getClassByCode(req.session.code, (err, cl) => {
                 datastore.addToClass(data.id, cl, (err, success) => {
                     if (success) {
                         datastore.commitTransaction();

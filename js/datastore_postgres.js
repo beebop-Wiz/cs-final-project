@@ -103,7 +103,14 @@ exports.addToClass = function (student, cl, callback = (err, success) => { }) {
 }
 
 exports.getStudentsForClass = function(cl, callback = (err, students) => {}) {
-    
+    client.query('SELECT users.id,email,admin,name FROM users JOIN studentclasses ON (users.id = studentclasses.student) WHERE class=$1', [cl], (err, q) => {
+        if(err) {
+            console.log(err);
+            callback({type:'postgres', data:err}, undefined);
+        } else {
+            callback(err, q.rows);
+        }
+    })
 }
 
 exports.commitTransaction = function (callback = (err) => { }) {

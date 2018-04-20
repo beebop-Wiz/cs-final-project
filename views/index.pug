@@ -25,16 +25,12 @@ html
           div(class="row justify-content-md-center")
             if showjoinerr
               case error.err
-                when 'duplicate-email'
-                  div(class="alert alert-warning" role="alert") Email already in use.
                 when 'invalid-code'
                   div(class="alert alert-warning" role="alert") Invalid access code.
                 when 'postgres'
                   div(class="alert alert-warning" role="alert") Database backend error.
           div(class="row justify-content-md-center")
-            form(autocomplete="off" action="/join" method="post")
+            form(autocomplete="off" action="/newuser" method="get")
               input(type="text" class="form-control" id="newuser_code" name="code" placeholder="Access code" required)
-              input(type="email" class="form-control" id="newuser_email" name="email" placeholder="Email address" required)
-              input(type="password" class="form-control" id="newuser_password" name="pass" placeholder="Password" required)
               button(type="submit" class="btn btn-primary") Join
     include bootstrap_bot.pug

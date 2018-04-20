@@ -1,0 +1,16 @@
+doctype html
+html
+  include bootstrap_top.pug
+
+  body
+    include navbar.pug
+    
+    div(class="container")
+        div(class="row justify-content-md-center")
+        h2 Create your Account
+        form(autocomplete="off" action="/join" method="post")
+            input(type="text" class="form-control" id="name" name="name" placeholder="Name" required)
+            input(type="email" class="form-control" id="email" name="email" placeholder="Email address" required)
+            input(type="password" class="form-control" id="password" name="pass" placeholder="Create a password" required)
+            button(type="submit" class="btn btn-primary") Join
+    include bootstrap_bot.pug

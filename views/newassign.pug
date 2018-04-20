@@ -1,0 +1,66 @@
+doctype html
+html
+  include bootstrap_top.pug
+
+  body
+    nav(class="navbar navbar-expand-lg navbar-light bg-light")
+      div(class="container-fluid")
+        div(class="navbar-header")
+          a(class="navbar-brand" href="/dashboard") Dashboard
+        ul(class="nav navbar-nav navbar-right")         
+          div(class="btn-group" role="group")    
+            button(type="button" class="btn btn-outline-secondary" disabled) Logged in as #{user} (admin)
+            a(href="/logout" class="btn btn-secondary" role="button") Logout
+    script.
+        var qi = 1;
+        var newquestion = function() {
+            var container = document.getElementById("questions");
+            var end = document.getElementById("newquestion");
+
+            var inputgroup = document.createElement("div");
+            inputgroup.setAttribute("class", "input-group");
+
+            var delgroup = document.createElement("div");
+            delgroup.setAttribute("class", "input-group-append");
+            var del = document.createElement("button");
+            del.setAttribute("type", "button");
+            del.setAttribute("class", "btn btn-outline-danger");
+            del.setAttribute("onclick", "delete_word(" + qi + ")");
+            var deltext = document.createTextNode("Delete");
+            del.appendChild(deltext);
+            delgroup.appendChild(del);
+
+            var word = document.createElement("input");
+            word.setAttribute("name", "word_" + qi);
+            word.setAttribute("class", "form-control");
+            word.setAttribute("type", "text");
+            word.setAttribute("placeholder", "Word " + qi);
+            word.setAttribute("required", true);
+
+            inputgroup.appendChild(word);
+            inputgroup.appendChild(delgroup);
+
+            container.insertBefore(inputgroup, end);
+            qi++;
+        }
+    div(class="container")
+        div(class="card")
+            div(class="card-body")
+                h2 Create an assignment
+                form(action="/newassign" method="post")
+                    div(class="form-group")
+                        input(type="text" class="form-control" id="title" name="title" placeholder="Assignment title" required)
+                        div(class="row")
+                            span(class="col")
+                                label(class="form-label" for="wc-min") Mininum word count
+                                input(type="number" class="form-control" id="wc-min" name="wc_min")
+                                small(id="wc-help" class="form-text text-muted") Leave blank for no minimum/maximum length
+                            span(class="col")
+                                label(class="form-label" for="wc-max") Maximum word count
+                                input(type="number" class="form-control" id="wc-max" name="wc_max")
+                    div(class="form-group" id="questions")
+                        button(type="button" class="btn btn-primary-outline" id="newquestion" onclick="window.newquestion();") Add a word
+                    button(type="submit" class="btn btn-primary") Create
+
+               
+    include bootstrap_bot.pug

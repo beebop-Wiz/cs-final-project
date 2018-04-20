@@ -20,7 +20,12 @@ html
                 div(class="row")
                     div(class="col")
                         h2 Students
+                        if students && students.length > 0
+                           ul(class="list-group")
+                           each student in students
+                             div(class="list-group-item") #{student.name} 
                     div(class="col")
                         h2 Assignments
+                        a(class="btn btn-primary" href="/newassign?class=" + info.id) Create an assignment
                
     include bootstrap_bot.pug
