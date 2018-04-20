@@ -8,7 +8,18 @@ html
         div(class="navbar-header")
           a(class="navbar-brand" href="/") Home
         ul(class="nav navbar-nav navbar-right")         
-          li Logged in as #{user}
-          li
-            a(href="/logout") Log out
+          div(class="btn-group" role="group")    
+            button(type="button" class="btn btn-outline-secondary" disabled) Logged in as #{user}
+            a(href="/logout" class="btn btn-secondary" role="button") Logout
+    div(class="container")
+      div(class="card")
+          div(class="card-body")
+              h2 Classes
+              if classes && classes.length > 0
+                ul(class="list-group")
+                each cl in classes
+                  a(class="list-group-item list-group-item-action" href="/class?id=" + cl.id) #{cl.name}
+
+              else
+                  div(class="alert alert-info" role="alert") You don't have any classes yet!
     include bootstrap_bot.pug

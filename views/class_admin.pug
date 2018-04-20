@@ -1,0 +1,26 @@
+doctype html
+html
+  include bootstrap_top.pug
+
+  body
+    nav(class="navbar navbar-expand-lg navbar-light bg-light")
+      div(class="container-fluid")
+        div(class="navbar-header")
+          a(class="navbar-brand" href="/dashboard") Dashboard
+        ul(class="nav navbar-nav navbar-right")         
+          div(class="btn-group" role="group")    
+            button(type="button" class="btn btn-outline-secondary" disabled) Logged in as #{user} (admin)
+            a(href="/logout" class="btn btn-secondary" role="button") Logout
+    div(class="container")
+        div(class="card")
+            div(class="card-body")
+                div(class="row")
+                    h1(class="col") #{info.name}
+                    h1(class="col-sm-auto") Access code: #{info.code}
+                div(class="row")
+                    div(class="col")
+                        h2 Students
+                    div(class="col")
+                        h2 Assignments
+               
+    include bootstrap_bot.pug

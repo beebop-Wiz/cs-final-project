@@ -1,0 +1,7 @@
+- convert all datastore callbacks to handle errors differently:
+  err = {
+      type: <postgres | invalid | ...>
+      data: {} // postgres error goes here if type=postgres, description of invalid data if type=invalid, &c.
+  }
+
+- implement transactions for DB updates

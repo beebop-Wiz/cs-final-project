@@ -1,3 +1,6 @@
-exports.auth = function(req, res) {
-    return true;
+exports.auth = function(req, res, callback) {
+    callback(true);
+}
+
+exports.init = function() {
 }
