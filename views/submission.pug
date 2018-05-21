@@ -1,0 +1,58 @@
+doctype html
+html
+  include bootstrap_top.pug
+
+  body
+    nav(class="navbar navbar-expand-lg navbar-light bg-light")
+      div(class="container-fluid")
+        div(class="navbar-header")
+          a(class="navbar-brand" href="/dashboard") Dashboard
+        ul(class="nav navbar-nav navbar-right")         
+          div(class="btn-group" role="group")    
+            if admin
+              button(type="button" class="btn btn-outline-secondary" disabled) Logged in as #{user} (admin)
+            else
+              button(type="button" class="btn btn-outline-secondary" disabled) Logged in as #{user}
+            a(href="/logout" class="btn btn-secondary" role="button") Logout
+    div(class="container")
+        div(class="card")
+            div(class="card-body") 
+                div(class="row")
+                    h2(class="col")
+                        if admin 
+                          a(href="/assign?id=" + assignment.id) #{assignment.title}
+                        else
+                          | #{assignment.title}
+                    h2(class="col") #{sub.name}
+                if assignment.assign.wc_max && assignment.assign.wc_min
+                    p #{assignment.assign.wc_min} to #{assignment.assign.wc_max} characters
+                else if assignment.assign.wc_max
+                    p maximum #{assignment.assign.wc_max} characters
+                else if assignment.assign.wc_min
+                    p minimum #{assignment.assign.wc_min} characters
+                else
+                    p No word limit.
+                if admin
+                    | #{sub.name}'s submission:
+                else   
+                    | Your submission:
+                div(class="row")
+                    div(class="col")
+                        div(class="card blockquote") #{sub.value}
+                        p #{sub.value.length} characters
+                    div(class="col")
+                        ul(class="list-group")
+                        - var total = 0, used = 0;
+
+                        each word in assignment.assign.words
+                            - var m = sub.value.match(new RegExp(word, 'u'));
+                            if m && m.length > 0
+                                div(class="list-group-item list-group-item-success" id="word-" + word) #{word}
+                                - used++;
+                                - total++;
+                            else
+                                div(class="list-group-item list-group-item-danger" id="word-" + word) #{word} 
+                                - total++;
+                        p #{used} / #{total} words used
+               
+    include bootstrap_bot.pug

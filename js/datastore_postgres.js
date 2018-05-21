@@ -21,9 +21,9 @@ exports.getClassesOwnedByUser = function (id, callback = (err, classes) => { }) 
 
 exports.getEnrolledClasses = function (id, callback = (err, classes => { })) {
     client.query('SELECT * FROM classes WHERE id = (SELECT class FROM studentclasses WHERE student=$1)', [id], (err, q) => {
-        if(err) {
+        if (err) {
             console.log(err);
-            callback({type: 'postgres', data:err}, undefined);
+            callback({ type: 'postgres', data: err }, undefined);
         } else {
             callback(err, q.rows);
         }
@@ -56,14 +56,18 @@ exports.createClass = function (owner, name, callback = (err, cid) => { }) {
     });
 }
 
-exports.getClassInfo = function (id, callback = (err, info) => { }) {
-    client.query('SELECT * FROM classes WHERE id=$1', [id], (err, q) => {
-        if (err) {
-            console.log(err);
-            callback(err, undefined);
-        } else {
-            callback(err, q.rows[0]);
-        }
+exports.getClassInfo = function (id) {
+    return new Promise((resolve, reject) => {
+        client.query('SELECT * FROM classes WHERE id=$1', [id], (err, q) => {
+            if (err) {
+                console.log(err);
+                reject({ 'type': 'postgres', data: err, source: 'getClassInfo' });
+            } else if (q.rows[0]) {
+                resolve(q.rows[0]);
+            } else {
+                reject({ 'type': 'invalid', data: { 'reason': 'nonexistent-class' }, source: 'getClassInfo' });
+            }
+        });
     });
 }
 
@@ -90,7 +94,7 @@ exports.addToClass = function (student, cl, callback = (err, success) => { }) {
         } else if (q.rows[0].count != 1) {
             callback({ type: 'invalid', data: { 'reason': 'nonexistent-class' } }, false);
         } else {
-            client.query('INSERT INTO studentclasses (student, class) VALUES ($1, $2)', [student, cl], (err, q) => {
+            client.query('INSERT INTO st    udentclasses (student, class) VALUES ($1, $2)', [student, cl], (err, q) => {
                 if (err) {
                     console.log(err);
                     callback({ type: 'postgres', data: err }, false);
@@ -102,37 +106,123 @@ exports.addToClass = function (student, cl, callback = (err, success) => { }) {
     });
 }
 
-exports.getStudentsForClass = function(cl, callback = (err, students) => {}) {
-    client.query('SELECT users.id,email,admin,name FROM users JOIN studentclasses ON (users.id = studentclasses.student) WHERE class=$1', [cl], (err, q) => {
-        if(err) {
+exports.addAssignment = function (title, owner, cl, assign, date) {
+    return new Promise((resolve, reject) => {
+        client.query('INSERT INTO assignments (title, owner, class, assign, due_date) VALUES ($1, $2, $3, $4, $5)', [title, owner, cl, assign, date], (err, q) => {
+            if (err) {
+                console.log(err);
+                reject({ type: 'postgres', data: err });
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+exports.getAssignmentsForClass = function (cl) {
+    return new Promise((resolve, reject) => {
+        client.query('SELECT * FROM assignments WHERE class=$1', [cl], (err, q) => {
+            if (err) {
+                console.log(err);
+                reject({ type: 'postgres', data: err });
+            } else {
+                resolve(q.rows);
+            }
+        });
+    });
+}
+
+exports.getAssignmentsForClassWithCompletion = function (cl, student) {
+    return new Promise((resolve, reject) => {
+        client.query('SELECT assignments.id,title,owner,class,date,due_date,submissions.id AS sub FROM assignments'
+            + ' LEFT OUTER JOIN submissions ON (submissions.assignment = assignments.id AND submissions.student = $1) WHERE class=$2 ORDER BY due_date', [student, cl], (err, q) => {
+                if (err) {
+                    console.log(err);
+                    reject({ type: 'postgres', data: err });
+                } else {
+                    resolve(q.rows);
+                }
+            });
+    });
+}
+
+exports.getAssignment = function (id) {
+    return new Promise((resolve, reject) => {
+        client.query('SELECT * FROM assignments WHERE id=$1', [id], (err, q) => {
+            if (err) {
+                console.log(err);
+                reject({ type: 'postgres', data: err });
+            } else {
+                resolve(q.rows[0]);
+            }
+        });
+    });
+}
+
+exports.submitAssignment = function (user, assign, text, callback = (err, success) => { }) {
+    client.query('INSERT INTO submissions (student, assignment, value) VALUES ($1, $2, $3) ON CONFLICT (student, assignment) DO UPDATE SET value = EXCLUDED.value, date = CURRENT_TIMESTAMP', [user, assign, text], (err, q) => {
+        if (err) {
             console.log(err);
-            callback({type:'postgres', data:err}, undefined);
+            callback({ type: 'postgres', data: err }, false);
         } else {
-            callback(err, q.rows);
+            callback(err, true);
         }
-    })
-}
-
-exports.commitTransaction = function (callback = (err) => { }) {
-    client.query('COMMIT', (err) => {
-        if (err) console.log(err);
-        callback(err);
     });
 }
 
-exports.openTransaction = function (callback = (err) => { }) {
-    client.query('BEGIN', (err) => {
-        if (err) exports.rollbackTransaction();
-        callback(err);
+exports.getSubmissionsByAssignment = function (assign) {
+    return new Promise((resolve, reject) => {
+        client.query('SELECT submissions.id,date,student,assignment,value,users.name FROM submissions JOIN users ON (users.id = submissions.student) WHERE assignment=$1 ORDER BY date', [assign], (err, q) => {
+            if (err) {
+                reject({ type: 'postgres', data: err });
+            } else {
+                resolve(q.rows);
+            }
+        });
     });
 }
 
-exports.rollbackTransaction = function () {
-    client.query('ROLLBACK', (err) => {
-        if (err) console.log(err);
+exports.getSubmission = function (id) {
+    return new Promise((resolve, reject) => {
+        client.query('SELECT submissions.id,date,student,assignment,value,users.name FROM submissions JOIN users ON (users.id = submissions.student) WHERE submissions.id=$1', [id], (err, q) => {
+            if (err) {
+                console.log(err);
+                reject({ type: 'postgres', data: err });
+            } else {
+                resolve(q.rows[0]);
+            }
+        });
     });
 }
 
-exports.init = function () {
+exports.getStudentsForClass = function (cl) {
+    return new Promise((resolve, reject) => {
+        client.query('SELECT users.id,email,admin,name FROM users JOIN studentclasses ON (users.id = studentclasses.student) WHERE class=$1', [cl], (err, q) => {
+            if (err) {
+                console.log(err);
+                reject({ type: 'postgres', data: err, source: 'getStudentsForClass' });
+            } else {
+                resolve(q.rows);
+            }
+        })
+    });
+}
+
+exports.getStudentInfo = function (id) {
+    return new Promise((resolve, reject) => {
+        client.query('SELECT * FROM users WHERE id=$1', [id], (err, q) => {
+            if (err) {
+                console.log(err);
+                reject({ type: 'postgres', data: err });
+            } else if (q.rowCount == 0) {
+                reject({ 'type': 'invalid', data: { 'reason': 'nonexistent-student' } });
+            } else {
+                resolve(q.rows[0]);
+            }
+        });
+    });
+}
+
+exports.init = function (errcb) {
     client.connect();
 }

@@ -5,3 +5,11 @@
   }
 
 - implement transactions for DB updates
+- implement permissions checking for assignments (can't add assignments if not admin / to someone else's class)
+- write blog article about \b and Chinese
+- server-side validation of submissions
+- allow finer control over submissions (due dates, resubmission counts, etc.)
+- allow assignments to be manually graded
+- redirect unauthed users from everywhere
+- student approval requirement
+- scores

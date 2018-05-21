@@ -15,7 +15,7 @@ html
         div(class="card")
             div(class="card-body")
                 div(class="row")
-                    h1(class="col") #{info.name}
+                    h1(class="col") #{info.name} 
                     h1(class="col-sm-auto") Access code: #{info.code}
                 div(class="row")
                     div(class="col")
@@ -23,9 +23,13 @@ html
                         if students && students.length > 0
                            ul(class="list-group")
                            each student in students
-                             div(class="list-group-item") #{student.name} 
+                              a(class="list-group-item" href="/student?id=" + student.id + "&cl=" + info.id) #{student.name} 
                     div(class="col")
                         h2 Assignments
+                        if assignments && assignments.length > 0
+                          ul(class="list-group")
+                          each assignment in assignments 
+                            a(class="list-group-item" href="/assign?id=" + assignment.id) #{assignment.title}
                         a(class="btn btn-primary" href="/newassign?class=" + info.id) Create an assignment
                
     include bootstrap_bot.pug

@@ -31,6 +31,10 @@ app.use(session({
 
 app.use(body_parser.urlencoded({ extended: true }));
 
+function renderError(req, res, err) {
+    res.render('error', { err: err });
+}
+
 app.get('/', (req, res) => {
     if (req.session && req.session.showlogout) {
         res.render('index', { showlogout: true });
@@ -48,17 +52,41 @@ app.get('/', (req, res) => {
 
 app.get('/class', (req, res) => {
     if (req.session && req.session.admin) {
-        datastore.getClassInfo(req.query.id, (err, cl) => {
-            if (err || !cl) res.redirect('/dashboard');
-            else datastore.getStudentsForClass(cl.id, (err, students) => {
-                res.render('class_admin', { user: req.session.user, info: cl, students: students });
-            });
+        var p_cl = datastore.getClassInfo(req.query.id);
+        var p_students = p_cl.then(cl => datastore.getStudentsForClass(cl.id));
+        var p_assignments = p_cl.then(cl => datastore.getAssignmentsForClass(cl.id));
+        Promise.all([p_cl, p_students, p_assignments]).then(([cl, students, assignments]) => {
+            res.render('class_admin', { user: req.session.user, info: cl, students: students, assignments: assignments });
+        }).catch(err => {
+            renderError(req, res, err);
         });
     } else if (req.session) {
-        datastore.getClassInfo(req.query.id, (err, cl) => {
-            if (err || !cl) res.redirect('/dashboard');
-            else res.render('class', { user: req.session.user, info: cl });
-        });
+        var p_cl = datastore.getClassInfo(req.query.id);
+        var p_assignments = p_cl.then(datastore.getAssignmentsForClassWithCompletion(cl.id, req.session.id));
+        Promise.all([p_cl, p_assignments])
+            .then(([cl, assignments]) => {
+                res.render('class', { user: req.session.user, info: cl, assignments: assignments });
+            }).catch(err => {
+                renderError(req, res, err);
+            });
+    } else {
+        res.redirect('/');
+    }
+});
+
+app.get('/student', (req, res) => {
+    if (req.session && req.session.admin) {
+        var p_student = datastore.getStudentInfo(req.query.id);
+        var p_cl = datastore.getClassInfo(req.query.cl);
+        Promise.all([p_cl, p_student])
+            .then(([cl, student]) => {
+                return datastore.getAssignmentsForClassWithCompletion(cl.id, req.query.id)
+                    .then(assignments => {
+                        res.render('student', { user: req.session.user, info: cl, assignments: assignments, student: student })
+                    });
+            }).catch(err => {
+                renderError(req, res, err);
+            });
     } else {
         res.redirect('/');
     }
@@ -67,12 +95,14 @@ app.get('/class', (req, res) => {
 app.post('/newclass', (req, res) => {
     if (req.session && req.session.admin) {
         datastore.checkClassNameExists(req.body.name, (err, exists) => {
-            if (exists) {
+            if (err) renderError(req, res, err);
+            else if (exists) {
                 req.session.showclassexists = true;
                 res.redirect('/newclass');
             } else {
                 datastore.createClass(req.session.id, req.body.name, (err, cid) => {
-                    res.redirect('/class?id=' + cid);
+                    if (err) renderError(req, res, err);
+                    else res.redirect('/class?id=' + cid);
                 });
             }
         });
@@ -147,7 +177,76 @@ app.get('/newuser', (req, res) => {
 });
 
 app.get('/newassign', (req, res) => {
-    res.render('newassign', { user: req.session.user });
+    res.render('newassign', { user: req.session.user, classid: req.query.class });
+});
+
+app.post('/newassign', (req, res) => {
+    console.log(JSON.stringify(req.body));
+    var words = [];
+    for (var i = 1; req.body["word_" + i] != undefined; i++) {
+        words[i - 1] = req.body["word_" + i];
+    }
+    var assign_data = {
+        wc_min: req.body.wc_min,
+        wc_max: req.body.wc_max,
+        words: words
+    };
+    console.log(JSON.stringify(assign_data));
+    datastore.addAssignment(req.body.title, req.session.id, req.body.class, assign_data, req.body.date)
+        .then(function () { res.redirect('/class?id=' + req.body.class) })
+        .catch(err => { renderError(req, res, err) });
+});
+
+app.get('/submission', (req, res) => {
+    if (req.session.admin) {
+        var p_sub = datastore.getSubmission(req.query.id);
+        var p_assign = p_sub.then(sub => datastore.getAssignment(sub.assignment));
+        Promise.all([p_sub, p_assign])
+            .then(([sub, assign]) => {
+                res.render("submission", { user: req.session.user, sub: sub, assignment: assign, admin: true });
+            }).catch(err => {
+                renderError(req, res, err);
+            });
+    } else if (req.session.id) {
+        var p_sub = datastore.getSubmission(req.query.id);
+        var p_assign = p_sub.then(sub => datastore.getAssignment(sub.assignment));
+        Promise.all([p_sub, p_assign])
+            .then(([sub, assign]) => {
+                res.render("submission", { user: req.session.user, sub: sub, assignment: assign });
+            }).catch(err => {
+                renderError(req, res, err);
+            });
+    } else {
+        res.redirect('/');
+    }
+});
+
+app.get('/assign', (req, res) => {
+    if (req.session.admin) {
+        var p_assign = datastore.getAssignment(req.query.id);
+        var p_subs = p_assign.then(assign => datastore.getSubmissionsByAssignment(assign.id));
+        Promise.all([p_assign, p_subs])
+            .then(([assign, subs]) => {
+                res.render("assign_admin", { user: req.session.user, assignment: assign, subs: subs });
+            }).catch(err => {
+                renderError(req, res, err);
+            });
+    } else {
+        datastore.getAssignment(req.query.id)
+            .then(assign => {
+                res.render("assign", { user: req.session.user, assignment: assign });
+            })
+            .catch(err => {
+                renderError(req, res, err);
+            })
+    }
+});
+
+app.post('/assign', (req, res) => {
+    // TODO validation
+    datastore.submitAssignment(req.session.id, req.body.id, req.body.sub, (err, success) => {
+        res.redirect('/dashboard');
+    });
 });
 
 app.post('/join', (req, res) => {

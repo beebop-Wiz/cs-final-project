@@ -1,0 +1,61 @@
+doctype html
+html
+  include bootstrap_top.pug
+
+  body
+    nav(class="navbar navbar-expand-lg navbar-light bg-light")
+      div(class="container-fluid")
+        div(class="navbar-header")
+          a(class="navbar-brand" href="/dashboard") Dashboard
+        ul(class="nav navbar-nav navbar-right")         
+          div(class="btn-group" role="group")    
+            button(type="button" class="btn btn-outline-secondary" disabled) Logged in as #{user} (admin)
+            a(href="/logout" class="btn btn-secondary" role="button") Logout
+    div(class="container")
+        div(class="card")
+            div(class="card-body") 
+                div(class="row")
+                    h2(class="col") #{assignment.title}
+                    h2(class="col-sm-auto")
+                        a(href="/class?id=" + assignment.class) View class
+                if assignment.assign.wc_max && assignment.assign.wc_min
+                    p #{assignment.assign.wc_min} to #{assignment.assign.wc_max} characters, #{assignment.points} points
+                else if assignment.assign.wc_max
+                    p maximum #{assignment.assign.wc_max} characters, #{assignment.points} points
+                else if assignment.assign.wc_min
+                    p minimum #{assignment.assign.wc_min} characters, #{assignment.points} points
+                else
+                    p No word limit, #{assignment.points} points
+                if assignment.due_date
+                    p Due #{new Date(assignment.due_date).toLocaleString()}
+                ul(class="list-group")
+                    
+                each word in assignment.assign.words
+                    div(class="list-group-item") #{word}
+                h3 Submissions
+                table(class="table table-striped")
+                    thead
+                        tr
+                            th Student
+                            th Grade
+                            th Date
+                            th(class="col-auto")
+                    each sub in subs
+                        tr
+                            td #{sub.name}
+                            - 
+                              var total = 0, used = 0;
+                              for(var i = 0; i < assignment.assign.words.length; i++) {
+                                var m = sub.value.match(new RegExp(assignment.assign.words[i], 'u'));
+                                if(m && m.length > 0) {
+                                    used++;
+                                }
+                                total++;
+                              }
+                            td #{used} / #{total} = #{(used / total * 100).toFixed(2)}%
+                            td #{new Date(sub.date).toLocaleString()}
+                            td 
+                                a(href="/submission?id=" + sub.id) View
+
+               
+    include bootstrap_bot.pug

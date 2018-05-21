@@ -9,13 +9,13 @@ html
           a(class="navbar-brand" href="/dashboard") Dashboard
         ul(class="nav navbar-nav navbar-right")
           div(class="btn-group" role="group")    
-            button(type="button" class="btn btn-outline-secondary" disabled) Logged in as #{user}
+            button(type="button" class="btn btn-outline-secondary" disabled) Logged in as #{user} (admin)
             a(href="/logout" class="btn btn-secondary" role="button") Logout
     div(class="container")
         div(class="card")
             div(class="card-body")
                 div(class="row")
-                    h1(class="col") #{info.name}
+                    h1(class="col") #{info.name} - #{student.name}
                 div(class="row")
                     h2 Assignments
                 div(class="row")
@@ -57,7 +57,7 @@ html
                         else
                           td -
                         if assign.date
-                          td
+                          td 
                             a(href="/submission?id=" + assign.sub) #{new Date(assign.date).toLocaleString()}
                         else
                           td -

@@ -1,0 +1,80 @@
+doctype html
+html
+  include bootstrap_top.pug
+
+  body(onload="window.update_stats();")
+    nav(class="navbar navbar-expand-lg navbar-light bg-light")
+      div(class="container-fluid")
+        div(class="navbar-header")
+          a(class="navbar-brand" href="/dashboard") Dashboard
+        ul(class="nav navbar-nav navbar-right")
+          div(class="btn-group" role="group")    
+            button(type="button" class="btn btn-outline-secondary" disabled) Logged in as #{user}
+            a(href="/logout" class="btn btn-secondary" role="button") Logout
+    div(class="container")
+        div(class="card")
+            div(class="card-body")
+                div(class="row")
+                    h2(class="col") #{assignment.title}
+                div(class="row")
+                    div(class="col")
+                        h3() Your submission:
+                        form(action="/assign" method="post")
+                            textarea(class="form-control" id="sub" name="sub" rows="10" onkeyup="window.update_stats();")
+                            input(type="hidden" name="id" value=assignment.id)
+                            small(id="word-count") 0/#{assignment.assign.wc_max} words
+                            button(type="submit" id="submit" class="form-control btn-outline-primary" disabled) Submit
+                    h3(class="col") Words to use:   
+                        ul(class="list-group")
+                        each word in assignment.assign.words
+                            div(class="list-group-item" id="word-" + word) #{word} 
+
+    script.
+
+        // would-be "hackers": do take note that this is validated on the server side.
+
+        // I used to exploit this sort of online assignment thing too.
+
+        // I know the game.
+
+        function countWords(s){
+            s = s.replace(/(^\s*)|(\s*$)/gi,"");//exclude  start and end white-space
+            s = s.replace(/[ ]{2,}/gi," ");//2 or more space to 1
+            s = s.replace(/\n /,"\n"); // exclude newline with a start spacing
+            return s.split(' ').length; 
+        }
+        var assign = !{JSON.stringify(assignment.assign)};
+
+        var update_stats = function() {
+            var area = document.getElementById("sub");
+            var nwords = area.value.length;
+            if(assign.wc_max && assign.wc_min) {
+                document.getElementById("word-count").innerHTML = "" + nwords + "/#{assignment.assign.wc_max} characters, #{assignment.assign.wc_min} minimum";
+                if(nwords <= assign.wc_max && nwords >= assign.wc_min)
+                    document.getElementById("submit").removeAttribute("disabled");
+                else document.getElementById("submit").setAttribute("disabled", true);
+            } else if(assign.wc_max) {
+                document.getElementById("word-count").innerHTML = "" + nwords + "/#{assignment.assign.wc_max} characters";
+                if(nwords <= assign.wc_max)
+                    document.getElementById("submit").removeAttribute("disabled");
+                else document.getElementById("submit").setAttribute("disabled", true);
+            } else if(assign.wc_min) {
+                document.getElementById("word-count").innerHTML = "" + nwords + "/#{assignment.assign.wc_min} minimum";
+                if(nwords >= assign.wc_min)
+                    document.getElementById("submit").removeAttribute("disabled");
+                else document.getElementById("submit").setAttribute("disabled", true);
+            } else {
+                document.getElementById("word-count").innerHTML = "No character limit.";
+                document.getElementById("submit").removeAttribute("disabled");
+            }
+
+            for(var i = 0; i < assign.words.length; i++) {
+                var m = area.value.match(new RegExp(assign.words[i], 'u'));
+                if(m && m.length > 0) {
+                    document.getElementById("word-" + assign.words[i]).setAttribute("class", "list-group-item list-group-item-success")
+                } else {
+                    document.getElementById("word-" + assign.words[i]).setAttribute("class", "list-group-item")
+                }
+            }
+        }
+    include bootstrap_bot.pug

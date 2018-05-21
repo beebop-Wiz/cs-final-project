@@ -1,0 +1,14 @@
+-
+    var dict_invalid = {
+        'nonexistent-class': "That class does not exist.",
+        'nonexistent-student': "That student does not exist.",
+    };
+    function translate_error(err) {
+        if(err.type == 'invalid') {
+            return dict_invalid[err.data["reason"]];
+        } else if(err.type == 'postgres') {
+            return "Internal database error: " + JSON.stringify(err.data);
+        } else {
+            return "Unknown error: " + JSON.stringify(err);
+        }
+    }

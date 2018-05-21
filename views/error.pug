@@ -1,0 +1,12 @@
+doctype html
+html
+  include bootstrap_top.pug
+  include error_dict.pug
+  body
+    div(class="container")
+        div(class="card")
+            div(class="card-body")
+                h2 Error
+                p #{translate_error(err)}
+                a(href="/dashboard") Go back
+    include bootstrap_bot.pug
