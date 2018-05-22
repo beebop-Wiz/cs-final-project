@@ -2,10 +2,11 @@ const { Client } = require('pg');
 const hash = require('password-hash');
 
 const client = new Client({
-    user: 'postgres',
-    host: 'localhost',
+    user: 'beebop',
+    host: '/var/run/postgresql',
+//    host: 'localhost',
     database: 'csproj',
-    password: 'tmp!foo'
+    password: undefined,
 });
 
 exports.auth = function (req, res, callback) {

@@ -25,6 +25,7 @@ html
                       th Date Due
                       th Submitted
                       th(class="col-auto")
+                    - if(!Array.isArray(assignments)) { assignments = [assignments]; } // hack
                     each assign in assignments
                       -
                         var note;

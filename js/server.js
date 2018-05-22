@@ -10,10 +10,10 @@ const auth = require('./auth_postgres.js'); // this can be changed to use other 
 const datastore = require('./datastore_postgres.js');
 
 
-/*const options = {
+const options = {
     key: fs.readFileSync('/etc/letsencrypt/live/gcloud.blakethomas.blog/privkey.pem'),
     cert: fs.readFileSync('/etc/letsencrypt/live/gcloud.blakethomas.blog/cert.pem')
-};*/
+};
 
 const app = express();
 const WEBROOT = '/home/beebop/src/cs-final-project/html/';
@@ -61,14 +61,19 @@ app.get('/class', (req, res) => {
             renderError(req, res, err);
         });
     } else if (req.session) {
-        var p_cl = datastore.getClassInfo(req.query.id);
-        var p_assignments = p_cl.then(datastore.getAssignmentsForClassWithCompletion(cl.id, req.session.id));
-        Promise.all([p_cl, p_assignments])
-            .then(([cl, assignments]) => {
-                res.render('class', { user: req.session.user, info: cl, assignments: assignments });
-            }).catch(err => {
-                renderError(req, res, err);
-            });
+        // var p_cl = datastore.getClassInfo(req.query.id) ;
+        // var p_assignments = p_cl.then(datastore.getAssignmentsForClassWithCompletion(req.query.id, req.session.id));
+        // Promise.all([p_cl, p_assignments])
+        //     .then(([cl, assignments]) => {
+        //         res.render('class', { user: req.session.user, info: cl, assignments: assignments });
+        //     }).catch(err => {
+        //         renderError(req, res, err);
+        //     });
+	datastore.getClassInfo(req.query.id).then((cl) => {
+	    datastore.getAssignmentsForClassWithCompletion(req.query.id, req.session.id).then((assignments) => {
+		res.render('class', { user: req.session.user, info: cl, assignments: assignments });
+	    });
+	});
     } else {
         res.redirect('/');
     }
@@ -250,7 +255,6 @@ app.post('/assign', (req, res) => {
 });
 
 app.post('/join', (req, res) => {
-    datastore.openTransaction();
     auth.newuser(req, res, req.session.code, (valid, data) => {
         console.log("/join callback");
         if (valid) {
@@ -259,10 +263,8 @@ app.post('/join', (req, res) => {
             datastore.getClassByCode(req.session.code, (err, cl) => {
                 datastore.addToClass(data.id, cl, (err, success) => {
                     if (success) {
-                        datastore.commitTransaction();
                         res.redirect('dashboard');
                     } else {
-                        datastore.rollbackTransaction();
                         req.session.reset();
                         req.session.showjoinerr = true;
                         req.session.error = err;
@@ -272,7 +274,6 @@ app.post('/join', (req, res) => {
                 });
             });
         } else {
-            datastore.rollbackTransaction();
             req.session.reset();
             req.session.showjoinerr = true;
             req.session.error = data;
@@ -289,5 +290,5 @@ app.get('/logout', (req, res) => {
 
 auth.init();
 datastore.init();
-//https.createServer(options, app).listen(443);
-http.createServer(app).listen(80);
+https.createServer(options, app).listen(443);
+//http.createServer(app).listen(80);

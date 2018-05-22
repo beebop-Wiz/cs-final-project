@@ -2,10 +2,11 @@ const { Client } = require('pg');
 const randomstring = require('randomstring');
 
 const client = new Client({
-    user: 'postgres',
-    host: 'localhost',
+    user: 'beebop',
+    host: '/var/run/postgresql',
+ //   host: 'localhost',
     database: 'csproj',
-    password: 'tmp!foo'
+    password: 'undefined'
 });
 
 exports.getClassesOwnedByUser = function (id, callback = (err, classes) => { }) {
@@ -46,7 +47,7 @@ exports.createClass = function (owner, name, callback = (err, cid) => { }) {
         length: 8,
         charset: 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
     });
-    client.query('INSERT INTO classes (creator, name, code) VALUES ($1, $2, $3) RETURNING id', [owner, name, code], (err, q) => {
+    client.query('INSERT INTO classes (creator, name, code, asccept) VALUES ($1, $2, $3, true) RETURNING id', [owner, name, code], (err, q) => {
         if (err) {
             console.log(err);
             callback(err, undefined);
@@ -94,7 +95,7 @@ exports.addToClass = function (student, cl, callback = (err, success) => { }) {
         } else if (q.rows[0].count != 1) {
             callback({ type: 'invalid', data: { 'reason': 'nonexistent-class' } }, false);
         } else {
-            client.query('INSERT INTO st    udentclasses (student, class) VALUES ($1, $2)', [student, cl], (err, q) => {
+            client.query('INSERT INTO studentclasses (student, class) VALUES ($1, $2)', [student, cl], (err, q) => {
                 if (err) {
                     console.log(err);
                     callback({ type: 'postgres', data: err }, false);
@@ -140,6 +141,9 @@ exports.getAssignmentsForClassWithCompletion = function (cl, student) {
                     console.log(err);
                     reject({ type: 'postgres', data: err });
                 } else {
+		    console.log(cl);
+		    console.log(student);
+		    console.log(q.rows);
                     resolve(q.rows);
                 }
             });
