@@ -11,11 +11,13 @@ const datastore = require('./datastore_postgres.js');
 
 
 const options = {
+    // TODO: CHANGE ME!
     key: fs.readFileSync('/etc/letsencrypt/live/gcloud.blakethomas.blog/privkey.pem'),
     cert: fs.readFileSync('/etc/letsencrypt/live/gcloud.blakethomas.blog/cert.pem')
 };
 
 const app = express();
+// TODO: CHANGE ME!
 const WEBROOT = '/home/beebop/src/cs-final-project/html/';
 
 app.set('views', '../views');
@@ -23,7 +25,8 @@ app.set('view engine', 'pug');
 
 app.use(session({
     cookieName: 'session',
-    secret: "asdf-ghjkl", 	// FIXME
+    secret: "asdf-ghjkl", 	// TODO: generate an actual secret
+                                // might want to generate per server run?
     duration: 2 * 60 * 60 * 1000,
     activeDuration: 5 * 60 * 1000,
 }));
@@ -36,6 +39,7 @@ function renderError(req, res, err) {
 }
 
 app.get('/', (req, res) => {
+    // TODO: The index page should be updated to handle errors with renderError
     if (req.session && req.session.showlogout) {
         res.render('index', { showlogout: true });
         req.session.reset();
@@ -61,6 +65,10 @@ app.get('/class', (req, res) => {
             renderError(req, res, err);
         });
     } else if (req.session) {
+
+	// This code was commented out because it stopped working and I couldn't figure out why in 10 minutes.
+	// It is a better way of doing the thing so could definitely be fixed.
+	
         // var p_cl = datastore.getClassInfo(req.query.id) ;
         // var p_assignments = p_cl.then(datastore.getAssignmentsForClassWithCompletion(req.query.id, req.session.id));
         // Promise.all([p_cl, p_assignments])
