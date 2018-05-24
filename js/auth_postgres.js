@@ -4,7 +4,6 @@ const hash = require('password-hash');
 const client = new Client({
     user: 'beebop',
     host: '/var/run/postgresql',
-//    host: 'localhost',
     database: 'csproj',
     password: undefined,
 });
