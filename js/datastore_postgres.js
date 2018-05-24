@@ -47,7 +47,7 @@ exports.createClass = function (owner, name, callback = (err, cid) => { }) {
         length: 8,
         charset: 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
     });
-    client.query('INSERT INTO classes (creator, name, code, asccept) VALUES ($1, $2, $3, true) RETURNING id', [owner, name, code], (err, q) => {
+    client.query('INSERT INTO classes (creator, name, code, accept) VALUES ($1, $2, $3, true) RETURNING id', [owner, name, code], (err, q) => {
         if (err) {
             console.log(err);
             callback(err, undefined);
